@@ -48,7 +48,8 @@ module pcie_tlp_fifo_raw #
     // TLP segment count (output)
     parameter OUT_TLP_SEG_COUNT = 1,
     // Segment select width
-    parameter SEG_SEL_WIDTH = $clog2(OUT_TLP_SEG_COUNT),
+    // parameter SEG_SEL_WIDTH = $clog2(OUT_TLP_SEG_COUNT),
+    parameter SEG_SEL_WIDTH = OUT_TLP_SEG_COUNT > 1 ? $clog2(OUT_TLP_SEG_COUNT) : 1,
     // Watermark level
     parameter WATERMARK = DEPTH/2,
     // Use control output

@@ -28,8 +28,9 @@ COCOTB_HDL_TIMEPRECISION = 1ps
 export COCOTB_RESOLVE_X ?= RANDOM
 
 DUT      = pcie_axi_master
+# DUT      = pcie_axi_master_read_simple
 TOPLEVEL = $(DUT)
-MODULE   = test_$(DUT)
+MODULE   = test_$(DUT)_read_simple
 VERILOG_SOURCES += ../../rtl/$(DUT).v
 VERILOG_SOURCES += ../../rtl/$(DUT)_rd.v
 VERILOG_SOURCES += ../../rtl/$(DUT)_wr.v

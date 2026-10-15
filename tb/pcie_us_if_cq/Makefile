@@ -59,6 +59,7 @@ else ifeq ($(SIM), verilator)
 
 	ifeq ($(WAVES), 1)
 		COMPILE_ARGS += --trace-fst
+		VERILATOR_TRACE = 1
 	endif
 endif
 

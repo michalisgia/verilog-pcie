@@ -233,6 +233,7 @@ reg [10:0] op_dword_count_reg = 11'd0, op_dword_count_next;
 reg [10:0] tlp_dword_count_reg = 11'd0, tlp_dword_count_next;
 reg [3:0] first_be_reg = 4'd0, first_be_next;
 reg [3:0] last_be_reg = 4'd0, last_be_next;
+reg [5:0] tlp_cmd_aperture_reg = 6'd0, tlp_cmd_aperture_next;
 
 reg [6:0] tlp_lower_addr_reg = 7'd0, tlp_lower_addr_next;
 reg [12:0] tlp_len_reg = 13'd0, tlp_len_next;
@@ -271,6 +272,7 @@ reg s_axis_cq_tready_reg = 1'b0, s_axis_cq_tready_next;
 
 reg [AXI_ADDR_WIDTH-1:0] m_axi_araddr_reg = {AXI_ADDR_WIDTH{1'b0}}, m_axi_araddr_next;
 reg [7:0] m_axi_arlen_reg = 8'd0, m_axi_arlen_next;
+reg [2:0] m_axi_arsize_reg = 3'd0, m_axi_arsize_next;
 reg m_axi_arvalid_reg = 1'b0, m_axi_arvalid_next;
 reg m_axi_rready_reg = 1'b0, m_axi_rready_next;
 
@@ -295,7 +297,8 @@ assign s_axis_cq_tready = s_axis_cq_tready_reg;
 assign m_axi_arid = {AXI_ID_WIDTH{1'b0}};
 assign m_axi_araddr = m_axi_araddr_reg;
 assign m_axi_arlen = m_axi_arlen_reg;
-assign m_axi_arsize = AXI_BURST_SIZE;
+// assign m_axi_arsize = AXI_BURST_SIZE;
+assign m_axi_arsize = m_axi_arsize_reg;
 assign m_axi_arburst = 2'b01;
 assign m_axi_arlock = 1'b0;
 assign m_axi_arcache = 4'b0011;
@@ -345,6 +348,7 @@ always @* begin
 
     m_axi_araddr_next = m_axi_araddr_reg;
     m_axi_arlen_next = m_axi_arlen_reg;
+    m_axi_arsize_next = m_axi_arsize_reg;
     m_axi_arvalid_next = m_axi_arvalid_reg && !m_axi_arready;
 
     axi_addr_next = axi_addr_reg;
@@ -353,6 +357,7 @@ always @* begin
     tlp_dword_count_next = tlp_dword_count_reg;
     first_be_next = first_be_reg;
     last_be_next = last_be_reg;
+    tlp_cmd_aperture_next = tlp_cmd_aperture_reg;
 
     tlp_cmd_lower_addr_next = tlp_cmd_lower_addr_reg;
     tlp_cmd_byte_len_next = tlp_cmd_byte_len_reg;
@@ -380,7 +385,8 @@ always @* begin
 
             if (s_axis_cq_tready & s_axis_cq_tvalid) begin
                 // header fields
-                axi_addr_next = {s_axis_cq_tdata[63:2], first_be_offset};
+                tlp_cmd_aperture_next = s_axis_cq_tdata[120:115];
+                axi_addr_next = ({s_axis_cq_tdata[63:2], first_be_offset})&((1'b1<<(tlp_cmd_aperture_next+1))-1);
                 tlp_cmd_status_next = CPL_STATUS_SC; // successful completion
                 if (AXIS_PCIE_DATA_WIDTH > 64) begin
                     op_dword_count_next = s_axis_cq_tdata[74:64];
@@ -547,6 +553,19 @@ always @* begin
 
                 m_axi_araddr_next = axi_addr_reg;
                 m_axi_arlen_next = (tlp_dword_count_next + axi_addr_reg[OFFSET_WIDTH+2-1:2] - 1) >> (AXI_BURST_SIZE-2);
+                // if (op_dword_count_reg<=)
+                // case (op_dword_count_reg)
+                if (op_dword_count_reg<=11'd1)  m_axi_arsize_next = 3'b010; else
+                if (op_dword_count_reg<=11'd2)  m_axi_arsize_next = 3'b011; else
+                if (op_dword_count_reg<=11'd4)  m_axi_arsize_next = 3'b100; else
+                if (op_dword_count_reg<=11'd8)  m_axi_arsize_next = 3'b101; else
+                if (op_dword_count_reg<=11'd16) m_axi_arsize_next = 3'b110; else
+                if (op_dword_count_reg<=11'd32) m_axi_arsize_next = 3'b111; else
+                    m_axi_arsize_next = 3'b111;
+                    // 11'd64:  m_axi_arsize_next = 3'b110;
+                    // 11'd128: m_axi_arsize_next = 3'b111;
+                    // default: m_axi_arsize_next = 3'b111;
+                // endcase // dword_count_reg
                 m_axi_arvalid_next = 1;
 
                 if (!tlp_cmd_last_next) begin
@@ -1059,6 +1078,7 @@ always @(posedge clk) begin
     tlp_dword_count_reg <= tlp_dword_count_next;
     first_be_reg <= first_be_next;
     last_be_reg <= last_be_next;
+    tlp_cmd_aperture_reg <= tlp_cmd_aperture_next;
 
     tlp_lower_addr_reg <= tlp_lower_addr_next;
     tlp_len_reg <= tlp_len_next;
@@ -1092,6 +1112,7 @@ always @(posedge clk) begin
 
     m_axi_araddr_reg <= m_axi_araddr_next;
     m_axi_arlen_reg <= m_axi_arlen_next;
+    m_axi_arsize_reg <= m_axi_arsize_next;
 
     max_payload_size_dw_reg <= 11'd32 << (max_payload_size > PAYLOAD_MAX ? PAYLOAD_MAX : max_payload_size);
 

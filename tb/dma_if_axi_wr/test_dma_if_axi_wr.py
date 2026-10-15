@@ -216,6 +216,7 @@ def cycle_pause():
 
 if cocotb.SIM_NAME:
 
+    # for test in [run_test_write, run_test_write_imm]:
     for test in [run_test_write, run_test_write_imm]:
 
         factory = TestFactory(test)

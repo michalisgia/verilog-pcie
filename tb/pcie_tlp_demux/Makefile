@@ -20,8 +20,8 @@
 
 TOPLEVEL_LANG = verilog
 
-SIM ?= icarus
-WAVES ?= 0
+SIM ?= verilator
+WAVES ?= 1
 
 COCOTB_HDL_TIMEUNIT = 1ns
 COCOTB_HDL_TIMEPRECISION = 1ps
@@ -58,12 +58,16 @@ ifeq ($(SIM), icarus)
 		COMPILE_ARGS += -s iverilog_dump
 	endif
 else ifeq ($(SIM), verilator)
-	COMPILE_ARGS += -Wno-SELRANGE -Wno-WIDTH
+# 	COMPILE_ARGS += -Wno-SELRANGE -Wno-WIDTH
 
 	COMPILE_ARGS += $(foreach v,$(filter PARAM_%,$(.VARIABLES)),-G$(subst PARAM_,,$(v))=$($(v)))
 
 	ifeq ($(WAVES), 1)
 		COMPILE_ARGS += --trace-fst
+		COMPILE_ARGS += --trace-structs --trace-params --trace-underscore
+		COMPILE_ARGS += --trace-max-array 4096 --trace-max-width 4096
+		VERILATOR_TRACE=1
+		export COCOTB_VERILATOR_TRACE=fst
 	endif
 endif
 

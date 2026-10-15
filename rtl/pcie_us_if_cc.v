@@ -83,7 +83,8 @@ parameter INT_TLP_SEG_COUNT = (CC_STRADDLE && AXIS_PCIE_DATA_WIDTH >= 512) ? 2 :
 parameter INT_TLP_SEG_DATA_WIDTH = TLP_DATA_WIDTH / INT_TLP_SEG_COUNT;
 parameter INT_TLP_SEG_STRB_WIDTH = TLP_STRB_WIDTH / INT_TLP_SEG_COUNT;
 
-parameter SEG_SEL_WIDTH = $clog2(INT_TLP_SEG_COUNT);
+// parameter SEG_SEL_WIDTH = $clog2(INT_TLP_SEG_COUNT);
+parameter SEG_SEL_WIDTH = INT_TLP_SEG_COUNT > 1 ? $clog2(INT_TLP_SEG_COUNT) : 0;
 
 // bus width assertions
 initial begin

@@ -180,6 +180,7 @@ assign sel_tlp_seq_valid = sel_tlp_seq_valid_reg;
 integer port, cur_port, seg, cur_seg;
 
 always @* begin
+    cur_port = 'h0;
     frame_next = frame_reg;
     port_next = port_reg;
 
@@ -241,8 +242,10 @@ always @* begin
 
     // compute mux settings
     for (port = 0; port < PORTS; port = port + 1) begin
-        port_seg_valid[port] = pause[port] ? 0 : {2{in_tlp_valid_full[port]}} >> port_seg_offset_reg[port];
-        port_seg_eop[port] = {2{in_tlp_eop_full[port]}} >> port_seg_offset_reg[port];
+        // port_seg_valid[port] = pause[port] ? 0 : {2{in_tlp_valid_full[port]}} >> port_seg_offset_reg[port];
+        port_seg_valid[port] = pause[port] ? 0 : {in_tlp_valid_full[port]};
+        // port_seg_eop[port] = {2{in_tlp_eop_full[port]}} >> port_seg_offset_reg[port];
+        port_seg_eop[port] = {in_tlp_eop_full[port]};
     end
 
     for (seg = 0; seg < TLP_SEG_COUNT; seg = seg + 1) begin
@@ -251,14 +254,17 @@ always @* begin
             if (ARB_TYPE_ROUND_ROBIN) begin
                 // round robin arb - start checking after previously-selected port
                 if (ARB_LSB_HIGH_PRIORITY) begin
-                    if (port_cyc < PORTS-1) begin
-                        cur_port = port_cyc + 1;
+                    // if (port_cyc < PORTS-1) begin
+                    if (integer'(port_cyc) < PORTS-1) begin
+                        cur_port = integer'(port_cyc) + 1;
                     end else begin
                         cur_port = 0;
                     end
                 end else begin
-                    if (port_cyc > 0) begin
-                        cur_port = port_cyc - 1;
+                    // if (port_cyc > 0) begin
+                    if (integer'(port_cyc) > 0) begin
+                        cur_port = integer'(port_cyc) - 1;
+                        // cur_port = port_cyc - 1;
                     end else begin
                         cur_port = PORTS-1;
                     end
@@ -274,7 +280,8 @@ always @* begin
             for (port = 0; port < PORTS; port = port + 1) begin
                 if (!frame_cyc) begin
                     // select port
-                    port_cyc = cur_port;
+                    // port_cyc = cur_port;
+                    port_cyc = cur_port[CL_PORTS-1:0];
                     seg_offset_cyc = port_seg_offset_next[cur_port];
                     if (port_seg_valid[cur_port][0]) begin
                         // set frame

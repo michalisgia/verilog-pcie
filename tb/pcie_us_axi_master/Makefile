@@ -29,7 +29,8 @@ export COCOTB_RESOLVE_X ?= RANDOM
 
 DUT      = pcie_us_axi_master
 TOPLEVEL = $(DUT)
-MODULE   = test_$(DUT)
+# MODULE   = test_$(DUT)
+MODULE   = test_$(DUT)_read_simple
 VERILOG_SOURCES += ../../rtl/$(DUT).v
 VERILOG_SOURCES += ../../rtl/$(DUT)_rd.v
 VERILOG_SOURCES += ../../rtl/$(DUT)_wr.v
@@ -37,7 +38,7 @@ VERILOG_SOURCES += ../../rtl/pcie_us_axis_cq_demux.v
 VERILOG_SOURCES += ../../rtl/pulse_merge.v
 
 # module parameters
-export PARAM_AXIS_PCIE_DATA_WIDTH := 64
+export PARAM_AXIS_PCIE_DATA_WIDTH := 256
 export PARAM_AXIS_PCIE_KEEP_WIDTH := $(shell expr $(PARAM_AXIS_PCIE_DATA_WIDTH) / 32 )
 export PARAM_AXIS_PCIE_CQ_USER_WIDTH := $(if $(filter-out 512,$(PARAM_AXIS_PCIE_DATA_WIDTH)),88,183)
 export PARAM_AXIS_PCIE_CC_USER_WIDTH := $(if $(filter-out 512,$(PARAM_AXIS_PCIE_DATA_WIDTH)),33,81)
